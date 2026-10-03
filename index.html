@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Little Journal</title>
+<style>
+:root{--bg:#121212;--card:#171717;--cell:#1c1c1c;--line:#2b2b2b;--tx:#ececec;--mu:#a3a3a3;--g:#1fae8f;--r:#f0304a;--a:#e8a33a;--b:#4a78ff;--blue:#3050ff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--tx);font:13px/1.35 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:calc(6px + env(safe-area-inset-top)) 12px calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+.red{color:var(--r)}.grn{color:var(--g)}.amb{color:var(--a)}.mu{color:var(--mu)}
+.bar{display:flex;gap:10px;align-items:center;margin:4px 0 22px;flex-wrap:wrap}
+.sel{background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23aaa' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:6px;padding:7px 34px 7px 12px;min-width:180px;appearance:none;-webkit-appearance:none;font-weight:500}
+.ctx{font-size:11px;color:#cfcfcf}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-weight:600}
+.btn:hover{border-color:#484848}
+.btn svg{width:14px;height:14px}
+.btn.pri{background:var(--blue);border-color:var(--blue)}
+.btn.go{background:var(--g);border-color:var(--g);color:#06231c}
+.btn.dng{color:var(--r)}
+.grid{display:grid;gap:16px;margin-bottom:22px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.gm{grid-template-columns:2.05fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.ban{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;margin-bottom:22px;flex-wrap:wrap;border-color:#2f3d39}
+.bd{padding:22px 22px 12px;flex:1;display:flex;flex-direction:column}
+.ft{border-top:1px solid var(--line);padding:24px 22px;display:flex;justify-content:space-between;font-size:12px;color:#c9c9c9;gap:10px;flex-wrap:wrap;align-items:center}
+h3{font-size:13px;font-weight:700;margin-bottom:20px}
+.lbl{font-size:11px;color:#c9c9c9}
+.big{font-size:18px;font-weight:700;margin-top:6px}
+.gauge{display:block;width:170px;margin:44px auto 8px}
+.lr{display:flex;align-items:center;font-size:11px;margin-top:8px;color:#d6d6d6}
+.lr span{flex:1}.lr b{min-width:24px;text-align:right}.lr em{font-style:normal;width:48px;text-align:right}
+.dot{width:7px;height:7px;border-radius:50%;margin-right:7px;display:inline-block;flex:none}
+.row{display:flex;justify-content:space-between;font-size:11px;gap:8px}
+.hb{height:22px;background:#222;border-radius:2px;margin:6px 0 14px;overflow:hidden}
+.hb i{display:block;height:100%}
+/* week strip + today */
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.wday{background:var(--cell);border:1px solid transparent;border-radius:4px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:92px}
+.wday.today{border-color:var(--blue)}
+.wdn{font-size:11px;font-weight:600}
+.wdots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.wdots i{width:8px;height:8px;border-radius:50%}
+.tl{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid #222;color:#ddd}.tl span{color:#aaa}
+.moment{font-size:12px;color:#ddd;font-style:italic;background:#141c1a;border:1px solid #233;border-radius:6px;padding:10px 12px;margin-top:12px;line-height:1.5}
+/* calendar */
+.calhd{display:flex;justify-content:space-between;align-items:flex-end}
+.wl{font-size:12px;color:#d0d0d0}
+.cal{display:grid;grid-template-columns:repeat(8,1fr);gap:6px 8px;margin-top:22px}
+.dh{text-align:center;font-size:11px;color:#d0d0d0;padding-bottom:4px}
+.cell{height:72px;background:var(--cell);border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;color:#d8d8d8;cursor:pointer;position:relative;border:2px solid transparent}
+.cell.hatch{background:repeating-linear-gradient(135deg,#1a1a1a 0 5px,#252525 5px 6px)}
+.cell.out,.cell.wk{cursor:default}
+.cell.fut span{color:#555}
+.cell.on b{font-size:10px;color:#e8fff8}
+.cell.sel{border-color:var(--blue)}
+.cell small{font-size:8px;color:#cfe}
+.cell.wk{border:1px dashed #353535;background:transparent;color:#555}
+.cell.wk b{font-size:10px}
+.cdots{display:flex;gap:2px}.cdots i{width:5px;height:5px;border-radius:50%}
+.nd{position:absolute;top:5px;left:5px;width:6px;height:6px;border-radius:50%;background:var(--b)}
+.calft{padding:12px 22px;font-size:10px;align-items:center}
+.nav{display:flex;gap:8px;align-items:center}
+.nav button{border:1px solid var(--line);border-radius:3px;min-width:18px;height:18px;line-height:14px;color:#aaa;padding:0 4px}
+.nav .tb{font-size:9px;padding:0 6px}
+/* evaluation */
+.ev h4{font-size:10px;letter-spacing:.06em;color:#cfcfcf;margin:16px 0 16px;font-weight:600}
+.er{display:flex;align-items:center;font-size:11px;margin-bottom:17px;color:#d6d6d6;gap:2px}
+.er span{flex:1}.er b{margin-right:8px;text-align:right;font-weight:500}
+.q{width:11px;height:11px;border:1px solid #555;border-radius:50%;font-size:7px;display:inline-flex;align-items:center;justify-content:center;color:#777;font-style:normal;flex:none;cursor:help}
+hr{border:0;border-top:1px solid var(--line);margin:2px 0 6px}
+.l5{display:inline-flex;gap:3px}.l5 i{width:10px;height:10px;border-radius:2px}
+/* charts */
+.chart{width:100%;height:210px;display:block;margin-top:14px}
+.empty{height:210px;display:flex;align-items:center;justify-content:center;color:#555;font-size:12px;text-align:center;padding:0 12px}
+.eqh{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ks{display:flex;gap:28px;flex-wrap:wrap}
+.ks div{font-size:10px;color:#cfcfcf;letter-spacing:.04em}
+.ks b{display:block;font-size:12px;margin-top:6px;color:var(--tx)}
+.radar{width:100%;max-width:320px;height:240px;margin:auto;display:block}
+/* table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #232323;white-space:nowrap}
+.num{text-align:right}
+.mu2{color:#c9c9c9}
+.pill{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;border:1px solid}
+.tnote{max-width:240px;overflow:hidden;text-overflow:ellipsis;color:#aaa}
+.acts{display:flex;gap:4px;justify-content:flex-end}
+.acts button{width:22px;height:22px;color:#bbb;display:inline-flex;align-items:center;justify-content:center}
+.acts button:hover{color:#fff}
+.acts svg{width:14px;height:14px}
+.th{display:flex;align-items:center;gap:12px;padding:22px 22px 14px}
+.th h3{margin:0;flex:1}
+.tf{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;font-size:11px;color:#cfcfcf;gap:10px;flex-wrap:wrap}
+.pg{display:flex;align-items:center;gap:6px}
+.pg button{border:1px solid var(--line);border-radius:3px;width:20px;height:20px;color:#aaa}
+.pg input{width:36px;text-align:center;background:#101010;border:1px solid var(--line);border-radius:3px;padding:2px}
+.rs{background:#101010;border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+/* modal */
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+.modal.hidden,.po.hidden{display:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.box.wide{max-width:760px}
+.box p{font-size:12px;margin-bottom:12px;line-height:1.5}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu)}
+.fg input,.fg select,.fg textarea{background:#101010;border:1px solid var(--line);border-radius:5px;padding:7px 9px;width:100%}
+.full{grid-column:1/-1}
+.mact{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:12px}.kv span{color:var(--mu)}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#262626;border:1px solid #3a3a3a;padding:9px 14px;border-radius:6px;font-size:12px;z-index:30}
+/* milestones */
+.tabs{display:flex;gap:6px;margin:4px 0 14px;flex-wrap:wrap}
+.msg{font-size:10px;letter-spacing:.06em;color:#cfcfcf;margin:16px 0 8px;font-weight:600}
+.msi{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #222;font-size:12px;color:#ddd;line-height:1.45}
+.msi input[type=checkbox]{accent-color:var(--g);width:17px;height:17px;margin-top:1px;flex:none}
+.msi span{flex:1}.msi input[type=date]{background:#101010;border:1px solid var(--line);border-radius:4px;padding:3px 5px;font-size:11px;width:130px}
+.tip{font-size:11px;color:#aaa;background:#141c1a;border:1px solid #233;border-radius:6px;padding:10px 12px;margin-top:12px;line-height:1.5}
+/* activity overlay */
+.po{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0,#132420 0,#0d0d0d 60%);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;-webkit-overflow-scrolling:touch}
+.pbox{width:100%;max-width:640px;background:#151515ee;border:1px solid var(--line);border-radius:10px;padding:22px;margin:calc(24px + env(safe-area-inset-top)) auto 24px}
+.plbl{font-size:11px;color:#bbb;margin:18px 0 8px}
+.ptype{font-size:11px;color:#9fd9c9;letter-spacing:.08em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;background:#1a1a1a}
+.chip.on{border-color:var(--g);color:var(--g);background:#10322a}
+.alist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aitem{text-align:left;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#121212}
+.aitem.on{border-color:var(--g);background:#10221d}
+.aitem b{display:block;font-size:13px;margin-bottom:3px}.aitem small{color:#999;font-size:11px}
+.adet{background:#111;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-top:12px;font-size:12px;color:#ddd;line-height:1.55}
+.adet ol{padding-left:18px;margin:6px 0}
+.big2{width:100%;justify-content:center;padding:12px;margin-top:20px;font-size:14px}
+.prun{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding-top:calc(20px + env(safe-area-inset-top));width:100%;max-width:640px}
+.ringw{position:relative;width:min(240px,64vw);height:min(240px,64vw)}
+.ringw svg{position:absolute;inset:0;width:100%;height:100%}
+.ringt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.atime{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums}
+.steps{width:100%;text-align:left;background:#151515;border:1px solid var(--line);border-radius:8px;padding:6px 14px}
+.steps label{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #222;font-size:13px;color:#ddd;line-height:1.45;cursor:pointer}
+.steps label:last-child{border:0}
+.steps input{accent-color:var(--g);width:17px;height:17px;margin-top:2px;flex:none}
+.steps input:checked+span{color:#666;text-decoration:line-through}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.gm,.g3{grid-template-columns:1fr}}
+@media(max-width:620px){.g4{grid-template-columns:1fr}.sel{min-width:0;flex:1}.cell{height:54px}.cal{gap:4px}.ctx{width:100%}.fg,.alist{grid-template-columns:1fr}.wdays{grid-template-columns:repeat(4,1fr)}
+  .fg input,.fg select,.fg textarea,.pbox textarea,.pbox input{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <select id="fDom" class="sel"></select>
+  <select id="fRange" class="sel">
+    <option value="today">Today</option><option value="week">This week</option><option value="7d">Last 7 days</option>
+    <option value="30d">Last 30 days</option><option value="90d">Last 90 days</option><option value="all">All time</option>
+  </select>
+  <span id="ctx" class="ctx"></span>
+  <div class="sp"></div>
+  <div id="barBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+</div>
+<div id="app"></div>
+<div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
+<div id="po" class="po hidden"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+/* ---------- content ---------- */
+const DOM={lang:{n:'Language',col:'#1fae8f'},lit:{n:'Literacy',col:'#4a78ff'},math:{n:'Numbers',col:'#e8a33a'},fine:{n:'Fine motor',col:'#b06cf0'},
+  gross:{n:'Gross motor',col:'#f0304a'},social:{n:'Social-emotional',col:'#ff8a65'},create:{n:'Creativity',col:'#5fd4e8'},life:{n:'Life skills',col:'#a3c94a'}};
+const DK=Object.keys(DOM);
+// [id, name, domain, minutes, materials, steps, tip]
+const LIB=[
+ ['picture-talk','Picture talk','lang',10,'A picture book with busy scenes',['Open to a busy page.','Ask “What’s happening?” and “Who… where… why?”','Repeat their answer back with one more word (“Dog run” → “The dog is running fast!”).','Let them ask you a question too.'],'Expanding their words models a slightly longer sentence without correcting them.'],
+ ['narrate','Narrate & expand','lang',10,'Any toys',['Sit with them while they play.','Describe what they’re doing, like a sports commentator.','When they talk, add one word or idea to what they said.','Pause and wait — give them time to answer.'],'Waiting 5 seconds after a question gives them room to talk.'],
+ ['my-day','Tell me about your day','lang',5,'None',['At dinner or bath, ask an open question (“What was fun today?”).','Model the answer shape: “First… then…”.','Ask one follow-up about what they say.'],'Talking about one thing that happened is a 4-year milestone — this practices it.'],
+ ['shared-read','Shared reading','lit',15,'2–3 picture books',['Let them choose the book.','Point to words as you read.','Pause before a familiar word and let them fill it in.','Ask “What do you think happens next?”'],'Re-reading favorites is good — repetition builds vocabulary and story sense.'],
+ ['letter-hunt','Letter hunt','lit',10,'Books, cereal boxes, signs',['Show the first letter of their name.','Hunt for that letter around the house or on a walk.','Say the letter’s sound each time you find it.'],'Start with their own name — it’s the most motivating letter set.'],
+ ['rhyme-time','Rhyme time','lit',10,'Nursery rhymes or songs',['Sing a familiar rhyme together.','Sing it again and leave off the rhyming word for them to say.','Make silly rhymes with their name (Max–wax–tax).'],'Hearing rhymes is an early step toward reading.'],
+ ['counting-walk','Counting walk','math',15,'Outdoors',['Count steps, cars, or birds out loud together.','Touch-count objects one at a time (1 touch = 1 number).','Ask “How many?” after counting — the last number is the answer.'],'Touching each item while counting builds one-to-one correspondence.'],
+ ['sort-it','Sort it out','math',10,'Blocks, socks, toy cars',['Mix a pile of items.','Sort by one rule: color, then size, then type.','Ask them to invent a rule and you guess it.'],'Sorting is early math — it’s about grouping and rules.'],
+ ['shape-detective','Shape detective','math',10,'Around the house',['Show a circle, square and triangle.','Hunt for each shape (plates, windows, pizza slices).','Draw the shapes you found.'],''],
+ ['kitchen-measure','Bigger / smaller','math',10,'Cups, spoons, water or rice',['Fill cups of different sizes.','Ask which has more or less.','Count spoonfuls to fill a cup.'],'Supervise water play closely.'],
+ ['beads','Bead stringing','fine',10,'Large beads or tube pasta, yarn with taped end',['Tape one end of the yarn to make a “needle”.','String beads or pasta.','Try a pattern: big–small–big.'],'Use large beads only and supervise — small items are a choking hazard.'],
+ ['playdough','Playdough','fine',15,'Playdough, cutters, plastic knife',['Roll balls and snakes.','Cut with a plastic knife or cookie cutters.','Make a “pizza” or animals and name them.'],''],
+ ['crayon-scissors','Draw & snip','fine',10,'Crayons, paper, child-safe scissors',['Draw circles, lines and dots together.','Snip paper strips with child scissors (thumb up!).','Glue the pieces into a collage.'],'Encourage a fingertip grip on the crayon rather than a fist.'],
+ ['tongs','Stickers & tongs','fine',10,'Stickers, pom-poms, kitchen tongs, 2 bowls',['Peel stickers and place them on a line.','Move pom-poms between bowls with tongs.','Count them as you go.'],''],
+ ['ball','Ball games','gross',15,'A large soft ball',['Roll, then gently toss the ball to each other.','Kick it toward a target (a box or two shoes).','Count catches in a row.'],'Catching a large ball most of the time is a 4-year milestone.'],
+ ['animal-moves','Animal moves','gross',10,'Space to move',['Hop like a frog, waddle like a penguin.','Stand on one foot like a flamingo — count to 5.','Let them pick an animal for you to copy.'],''],
+ ['playground','Playground / outdoor play','gross',30,'Park or yard',['Climb, slide, swing and run.','Play chase or follow-the-leader.','Let them lead and take small safe risks.'],'Outdoor time counts toward their daily active play.'],
+ ['freeze-dance','Freeze dance','gross',10,'Music',['Play music and dance.','Pause it — everyone freezes.','Try slow songs and fast songs.'],'Freezing on cue also practices self-control.'],
+ ['feelings','Feelings faces','social',10,'Mirror or picture book',['Make happy, sad, angry and surprised faces in a mirror.','Name feelings of characters in a book.','Ask “Why do you think they feel that way?”'],'Naming feelings helps them handle big ones later.'],
+ ['turns','Turn-taking game','social',15,'Simple board game, or a ball',['Play a simple game (or roll a ball back and forth).','Say “My turn… your turn” out loud.','Practice losing kindly — model it yourself.'],''],
+ ['pretend','Pretend play','social',20,'Toy kitchen, doctor kit, dress-up',['Set up a scene: store, doctor, restaurant.','Take a role and let them direct you.','Add a small problem to solve (“Oh no, my teddy is sick!”).'],'Pretending to be someone else is a 4-year milestone.'],
+ ['art','Paint & draw','create',20,'Paper, crayons or washable paint',['Let them make whatever they want.','Describe what you see (“lots of blue swirls!”) instead of guessing what it is.','Ask them to tell you about it.'],'Process over product — there’s no wrong way.'],
+ ['build','Build it','create',20,'Blocks or Duplo',['Build a tower, then a bridge.','Challenge: build something a toy car can drive under.','Knock it down and rebuild together.'],''],
+ ['music','Music makers','create',10,'Pots, spoons, shakers',['Make instruments from kitchen items.','Play loud then soft, fast then slow.','Copy each other’s rhythms.'],''],
+ ['helper','Little helper','life',10,'Household tasks',['Pick one job: set napkins, match socks, water plants, tidy toys.','Show once, then let them try.','Thank them for helping, specifically.'],'Liking to be a “helper” is a 4-year milestone — lean into it.'],
+ ['dress','Dress myself','life',10,'Loose pants, jacket, Velcro shoes',['Lay clothes out in order.','Let them try each piece; help only with the tricky part.','Practice one big button or zipper start.'],'Allow extra time — rushing makes this harder.'],
+ ['kitchen-help','Kitchen helper','life',15,'Washing bowl, butter knife, soft food',['Wash vegetables in a bowl of water.','Pour water from a small pitcher.','Spread or stir with supervision.'],'Keep them away from the stove and sharp knives.']];
+const LIBM=Object.fromEntries(LIB.map(a=>[a[0],a]));
+const MSD={social:'Social / emotional',lang:'Language / communication',cog:'Learning / thinking',move:'Movement / physical'};
+const MS={
+ 3:[['social','Calms down within about 10 minutes after you leave (e.g., at drop-off)'],['social','Notices other children and joins them to play'],
+    ['lang','Has a conversation with at least two back-and-forth exchanges'],['lang','Asks “who,” “what,” “where,” or “why” questions'],['lang','Says what action is happening in a picture or book when asked'],
+    ['lang','Says their first name when asked'],['lang','Talks well enough for others to understand most of the time'],
+    ['cog','Draws a circle when you show them how'],['cog','Avoids touching hot objects when you warn them'],
+    ['move','Strings items together, like large beads or macaroni'],['move','Puts on some clothes alone, like loose pants or a jacket'],['move','Uses a fork']],
+ 4:[['social','Pretends to be something else during play (teacher, superhero, dog)'],['social','Asks to go play with other children if none are around'],['social','Comforts others who are hurt or sad'],
+    ['social','Avoids danger, like not jumping from tall heights at the playground'],['social','Likes to be a “helper”'],['social','Changes behavior based on where they are (library, playground)'],
+    ['lang','Says sentences with four or more words'],['lang','Says some words from a song, story, or nursery rhyme'],['lang','Talks about at least one thing that happened during their day'],
+    ['lang','Answers simple questions like “What is a coat for?”'],
+    ['cog','Names a few colors of items'],['cog','Tells what comes next in a well-known story'],['cog','Draws a person with three or more body parts'],
+    ['move','Catches a large ball most of the time'],['move','Serves food or pours water, with adult supervision'],['move','Unbuttons some buttons'],['move','Holds a crayon or pencil between fingers and thumb (not a fist)']],
+ 5:[['social','Follows rules or takes turns when playing games with other children'],['social','Sings, dances, or acts for you'],['social','Does simple chores at home, like matching socks or clearing the table'],
+    ['lang','Tells a story they heard or made up with at least two events'],['lang','Answers simple questions about a book or story after you read it'],
+    ['lang','Keeps a conversation going with more than three back-and-forth exchanges'],['lang','Uses or recognizes simple rhymes (bat–cat, ball–tall)'],
+    ['cog','Counts to 10'],['cog','Names some numbers between 1 and 5 when you point to them'],['cog','Uses words about time, like “yesterday,” “tomorrow,” “morning,” or “night”'],
+    ['cog','Pays attention for 5–10 minutes during activities like story time (screen time doesn’t count)'],['cog','Writes some letters in their name'],['cog','Names some letters when you point to them'],
+    ['move','Buttons some buttons'],['move','Hops on one foot']]};
+const ENG=['Not into it','A little','Engaged','Loved it','Asked for more'];
+const MOOD=['Very hard day','Rough','Okay','Good','Great'];
+
+/* ---------- storage ---------- */
+const K={a:'kj.acts.v1',d:'kj.days.v1',m:'kj.ms.v1',s:'kj.settings.v1'};
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
+const save=()=>{localStorage.setItem(K.a,JSON.stringify(acts));localStorage.setItem(K.d,JSON.stringify(days));localStorage.setItem(K.m,JSON.stringify(ms));localStorage.setItem(K.s,JSON.stringify(settings))};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+let acts=load(K.a,[]);if(!Array.isArray(acts))acts=[];
+let days=load(K.d,{}),ms=load(K.m,{}),settings=Object.assign({name:'',birth:'',learnGoal:30,screenMax:60,activeGoal:180,sleepMin:10,sleepMax:13,unit:'us'},load(K.s,{}));
+
+/* ---------- helpers ---------- */
+const r1=v=>Math.round(v*10)/10;
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ymd(d)};
+const diffDays=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const monday=s=>{const d=pd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d)};
+const today=()=>ymd(new Date());
+const dayOf=a=>ymd(new Date(a.time));
+const fdate=s=>pd(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const fnum=v=>(+v).toLocaleString('en-US',{maximumFractionDigits:1});
+const fmin=m=>{m=Math.round(m||0);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
+const mmss=s=>{s=Math.max(0,Math.ceil(s));return`${Math.floor(s/60)}:${pad(s%60)}`};
+const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toLocalInput=iso=>{const d=new Date(iso);return`${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)};
+const CV={grn:'var(--g)',red:'var(--r)',amb:'var(--a)','':'transparent'};
+const num=v=>v===''||v==null||isNaN(+v)?null:+v;
+const kid=()=>settings.name||'your child';
+const HU=()=>settings.unit==='us'?'in':'cm',WU=()=>settings.unit==='us'?'lb':'kg';
+function ageMonths(){if(!settings.birth)return null;const b=pd(settings.birth),n=new Date();let m=(n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth();if(n.getDate()<b.getDate())m--;return Math.max(0,m)}
+const ageLabel=()=>{const m=ageMonths();return m==null?'':`${Math.floor(m/12)}y ${m%12}m`};
+const targetBand=()=>{const m=ageMonths();return m==null?4:m<36?3:m<48?4:5};
+const msId=(b,i)=>`${b}-${i}`;
+const msDone=b=>MS[b].filter((_,i)=>ms[msId(b,i)]).length;
+const SV='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const I={
+  info:`<svg ${SV}><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`,
+  note:`<svg ${SV}><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>`,
+  notes:`<svg ${SV}><path d="M4 4h11l5 5v11H4z"/><path d="M8 13h8M8 17h5"/></svg>`,
+  dl:`<svg ${SV}><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>`,
+  data:`<svg ${SV}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
+  plus:`<svg ${SV}><path d="M12 5v14M5 12h14"/></svg>`,
+  star:`<svg ${SV}><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>`,
+  play:`<svg ${SV}><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>`};
+$('#barBtns').innerHTML=`<button class="btn" data-act="data">${I.data}Settings</button><button class="btn" data-act="milestones">${I.star}Milestones</button><button class="btn" data-act="day">${I.notes}Day log</button><button class="btn" data-act="add">${I.plus}Log</button><button class="btn go" data-act="astart">${I.play}Start activity</button>`;
+$('#fDom').innerHTML='<option value="all">All areas</option>'+DK.map(k=>`<option value="${k}">${DOM[k].n}</option>`).join('');
+
+/* ---------- audio / wake ---------- */
+let AC=null,WL=null;
+function chime(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime;
+  [[660,0],[880,.25],[990,.5]].forEach(([f,o])=>{const s=AC.createOscillator(),g=AC.createGain();s.type='sine';s.frequency.value=f;g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.16,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+1.2);s.connect(g).connect(AC.destination);s.start(t+o);s.stop(t+o+1.3)})}catch{}}
+async function wake(){try{WL=await navigator.wakeLock?.request('screen')}catch{}}
+const unwake=()=>{try{WL?.release()}catch{}WL=null};
+
+/* ---------- state & filters ---------- */
+const S={dom:'all',range:'7d',sel:null,month:null,page:1,rows:20};
+{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1)}
+const RL={today:'Today',week:'This week','7d':'Last 7 days','30d':'Last 30 days','90d':'Last 90 days',all:'All time'};
+const domOk=a=>S.dom==='all'||a.domain===S.dom;
+function range(){
+  if(S.sel)return[S.sel,S.sel];
+  const t=today();
+  switch(S.range){case'today':return[t,t];case'week':return[monday(t),t];case'7d':return[addDays(t,-6),t];case'30d':return[addDays(t,-29),t];case'90d':return[addDays(t,-89),t];default:return['0000-00-00','9999-99-99']}
+}
+function filtered(){const[a,b]=range();return acts.filter(x=>{const d=dayOf(x);return domOk(x)&&d>=a&&d<=b})}
+
+/* ---------- stats ---------- */
+const readDay=d=>(num(days[d]?.books)||0)>0||acts.some(a=>a.domain==='lit'&&dayOf(a)===d);
+function readStreak(){let c=0,d=today();if(!readDay(d))d=addDays(d,-1);while(readDay(d)&&c<3650){c++;d=addDays(d,-1)}return c}
+function stats(ff,rg){
+  const a=[...ff].sort((x,y)=>new Date(x.time)-new Date(y.time)),dm={},dmin={};DK.forEach(k=>dmin[k]=0);
+  a.forEach(x=>{const d=dayOf(x),o=(dm[d]??={min:0,n:0,doms:[],es:0,en:0});o.min+=x.min||0;o.n++;o.doms.push(x.domain);if(x.eng){o.es+=x.eng;o.en++}dmin[x.domain]=(dmin[x.domain]||0)+(x.min||0)});
+  const ds=Object.keys(dm).sort().map(d=>({d,...dm[d]}));
+  let from=rg[0],to=rg[1];
+  if(from==='0000-00-00'){const all=[...acts.map(dayOf),...Object.keys(days)].sort();from=all[0]||today();to=today()}
+  const span=Math.max(1,diffDays(from,to)+1),tot=a.reduce((s,x)=>s+(x.min||0),0),eng=a.filter(x=>x.eng);
+  const L=Object.keys(days).filter(d=>d>=from&&d<=to).sort().map(d=>({d,...days[d]}));
+  const av=f=>{const v=L.map(x=>num(x[f])).filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
+  const sl=L.filter(x=>num(x.sleep)!=null).map(x=>({d:x.d,v:(num(x.sleep)||0)+(num(x.nap)||0)}));
+  const scr=L.filter(x=>num(x.screen)!=null).map(x=>({d:x.d,v:num(x.screen)}));
+  const actv=L.filter(x=>num(x.active)!=null).map(x=>({d:x.d,v:num(x.active)}));
+  let readDays=0;for(let i=0;i<Math.min(span,3650);i++)if(readDay(addDays(from,i)))readDays++;
+  const wk7=new Set(acts.filter(x=>dayOf(x)>addDays(today(),-7)).map(x=>x.domain));
+  const lastAll=acts.length?acts.map(dayOf).sort().at(-1):null;
+  return{a,ds,from,to,span,tot,N:a.length,D:ds.length,dmin,avgMin:tot/span,eng:eng.length?eng.reduce((s,x)=>s+x.eng,0)/eng.length:null,
+    L,sl,scr,actv,sleep:sl.length?sl.reduce((s,x)=>s+x.v,0)/sl.length:null,night:av('sleep'),nap:av('nap'),
+    inBand:sl.filter(x=>x.v>=settings.sleepMin&&x.v<=settings.sleepMax).length,under:sl.filter(x=>x.v<settings.sleepMin).length,over:sl.filter(x=>x.v>settings.sleepMax).length,
+    screen:scr.length?scr.reduce((s,x)=>s+x.v,0)/scr.length:null,scrOk:scr.filter(x=>x.v<=settings.screenMax).length,scrMax:Math.max(0,...scr.map(x=>x.v)),
+    active:actv.length?actv.reduce((s,x)=>s+x.v,0)/actv.length:null,actOk:actv.filter(x=>x.v>=settings.activeGoal).length,
+    books:av('books'),mood:av('mood'),tantrums:av('tantrums'),readDays,streak:readStreak(),dom7:wk7.size,
+    since:lastAll?diffDays(lastAll,today()):null,last5:a.slice(-5)};
+}
+function suggest(){
+  const m={};DK.forEach(k=>m[k]=0);acts.filter(x=>dayOf(x)>addDays(today(),-7)).forEach(x=>m[x.domain]=(m[x.domain]||0)+(x.min||0));
+  const dom=DK.slice().sort((a,b)=>m[a]-m[b])[0];
+  const last=id=>{const l=acts.filter(x=>x.lib===id).map(dayOf).sort().at(-1);return l||'0000'};
+  const act=LIB.filter(x=>x[2]===dom).sort((a,b)=>last(a[0]).localeCompare(last(b[0])))[0];
+  return{dom,act:act[0]};
+}
+
+/* ---------- svg charts ---------- */
+function gauge(segs,text){
+  const cx=100,cy=92,r=72,id='g'+uid();
+  const P=f=>{const a=Math.PI*(1-f);return(cx+r*Math.cos(a)).toFixed(2)+' '+(cy-r*Math.sin(a)).toFixed(2)};
+  const arc=(a,b)=>`M${P(a)}A${r} ${r} 0 0 1 ${P(b)}`;
+  const col={g:`url(#${id}g)`,r:`url(#${id}r)`,a:'#e8a33a',b:'#4a78ff',n:'#4a4a4a'};
+  let s=0,p='';
+  for(const[f,c]of segs){if(!(f>0))continue;const e=Math.min(1,s+f);p+=`<path d="${arc(s,e)}" stroke="${col[c]}" stroke-width="17" fill="none"/>`;s=e}
+  return`<svg class="gauge" viewBox="0 0 200 104"><defs>
+    <linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="28" x2="172" y1="0" y2="0"><stop offset="0" stop-color="#157a66"/><stop offset=".45" stop-color="#1fae8f"/></linearGradient>
+    <linearGradient id="${id}r" gradientUnits="userSpaceOnUse" x1="28" x2="172" y1="0" y2="0"><stop offset=".45" stop-color="#f0304a"/><stop offset="1" stop-color="#5a1420"/></linearGradient></defs>
+    <path d="${arc(0,1)}" stroke="#252525" stroke-width="17" fill="none"/>${p}
+    <text x="100" y="${cy-2}" text-anchor="middle" font-size="21" font-weight="700" fill="#ececec" font-family="Inter,system-ui">${text}</text></svg>`;
+}
+function smooth(pts){
+  let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    d+=` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+function area(series,color,{zero=true,tgt}={}){
+  if(series.length<2)return'<div class="empty">Not enough data yet</div>';
+  const W=800,H=200,p=12;let mn=Math.min(...series),mx=Math.max(...series,tgt||0);
+  if(zero){mn=Math.min(0,mn);mx=Math.max(1,mx*1.05)}else{const pp=(mx-mn)*.15||Math.abs(mx)*.02||1;mn-=pp;mx+=pp}
+  const span=(mx-mn)||1,X=i=>p+i*(W-2*p)/(series.length-1),Y=v=>p+(mx-v)/span*(H-2*p);
+  const d=smooth(series.map((v,i)=>[X(i),Y(v)])),base=zero?Y(0):H,id='a'+uid();
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".25"/><stop offset="1" stop-color="${color}" stop-opacity=".03"/></linearGradient></defs>
+    <path d="${d} L${X(series.length-1)},${base} L${X(0)},${base} Z" fill="url(#${id})"/>
+    ${tgt?`<line x1="${p}" x2="${W-p}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="#666" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>`:''}
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function bars(vals,{lines=[],colorFn}={}){
+  if(!vals.length)return'<div class="empty">Nothing logged in range</div>';
+  const W=400,H=200,p=14,mx=Math.max(1,...vals,...lines)*1.08,n=vals.length,slot=(W-20)/n,bw=Math.min(slot*.7,300),id='b'+uid(),Y=v=>H-p-v/mx*(H-2*p);
+  const rects=vals.map((v,i)=>{const x=10+i*slot+(slot-bw)/2,y=Y(v),c=colorFn?colorFn(v):'g';
+    return`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" rx="2" fill="url(#${id}${c})"/>`}).join('');
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs>
+    <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1fae8f" stop-opacity=".15"/><stop offset="1" stop-color="#1fae8f"/></linearGradient>
+    <linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8a33a" stop-opacity=".15"/><stop offset="1" stop-color="#e8a33a"/></linearGradient>
+    <linearGradient id="${id}r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0304a" stop-opacity=".15"/><stop offset="1" stop-color="#f0304a"/></linearGradient></defs>${rects}
+    ${lines.map(l=>`<line x1="6" x2="${W-6}" y1="${Y(l).toFixed(1)}" y2="${Y(l).toFixed(1)}" stroke="#777" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
+}
+function radar(labels,raw){
+  const n=labels.length,cx=160,cy=124,R=76,A=labels.map((_,i)=>(-90+i*360/n)*Math.PI/180),mx=Math.max(...raw)||1;
+  const pt=(i,v)=>[cx+R*v*Math.cos(A[i]),cy+R*v*Math.sin(A[i])];
+  const poly=f=>A.map((_,i)=>pt(i,f(i)).map(x=>x.toFixed(1)).join(',')).join(' ');
+  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}</text>`}).join('');
+  return`<svg class="radar" viewBox="0 0 320 250" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#ddd">
+    ${[1,.75,.5,.25].map(v=>`<polygon points="${poly(()=>v)}" fill="none" stroke="${v===1?'#444':'#2e2e2e'}"/>`).join('')}
+    ${A.map((_,i)=>{const[x,y]=pt(i,1);return`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2e2e2e"/>`}).join('')}
+    <polygon points="${poly(i=>Math.max(.04,raw[i]/mx))}" fill="#1fae8f" fill-opacity=".35" stroke="#1fae8f" stroke-width="1.5"/>${lab}</svg>`;
+}
+
+/* ---------- sections ---------- */
+const foot=(a,b)=>`<div class="ft"><span>${a}</span><span>${b}</span></div>`;
+const lr=(col,label,v,p)=>`<div class="lr"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b>${p!==undefined?`<em>${p}</em>`:''}</div>`;
+const er=(col,label,val,tip='')=>`<div class="er"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
+const hbar=(label,txt,f,col)=>`<div class="row"><span>${label}</span><span>${txt}</span></div><div class="hb"><i style="width:${Math.min(1,f||0)*100}%;background:linear-gradient(90deg,${col},${col}44)"></i></div>`;
+const f1=v=>v==null?'—':fnum(r1(v));
+const pill=d=>`<span class="pill" style="color:${DOM[d].col};border-color:${DOM[d].col}55;background:${DOM[d].col}1a">${DOM[d].n}</span>`;
+
+function weekHTML(){
+  const mon=monday(today()),t=today(),N=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],sg=suggest(),sa=LIBM[sg.act];
+  const cells=N.map((n,i)=>{const d=addDays(mon,i),l=acts.filter(x=>dayOf(x)===d),m=l.reduce((s,x)=>s+(x.min||0),0);
+    return`<div class="wday${d===t?' today':''}"><div class="wdn">${n} <span class="mu" style="font-weight:400">${pd(d).getDate()}</span></div>
+      <div class="wdots">${l.map(x=>`<i style="background:${DOM[x.domain].col}" title="${esc(x.activity)}"></i>`).join('')}</div>
+      <div style="font-size:11px" class="${m>=settings.learnGoal?'grn':m?'':'mu'}">${m?fmin(m):d<=t?'—':''}</div>${readDay(d)?'<div style="font-size:10px" class="mu">📖</div>':''}</div>`}).join('');
+  const cov=new Set(acts.filter(x=>dayOf(x)>=mon).map(x=>x.domain)).size;
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">This week${settings.name?' with '+esc(settings.name):''}</h3><div class="lbl" style="margin-bottom:16px">Dots are activities, colored by area · 📖 = read together</div>
+    <div class="wdays">${cells}</div></div>
+    <div class="ft"><span>Areas covered: <b class="${cov>=6?'grn':cov>=4?'amb':''}">${cov}</b> / 8 · Least practiced lately: ${pill(sg.dom)} → <b>${esc(sa[1])}</b></span>
+    <button class="btn go" data-act="astart" data-v="${sg.act}">${I.play}Start ${esc(sa[1])}</button></div></div>`;
+}
+function todayHTML(){
+  const t=today(),v=days[t]||{},m=acts.filter(x=>dayOf(x)===t).reduce((s,x)=>s+(x.min||0),0);
+  const mom=Object.keys(days).filter(d=>days[d].moment).sort().at(-1);
+  const sl=num(v.sleep)!=null?(num(v.sleep)||0)+(num(v.nap)||0):null;
+  const row=(l,val,cls='')=>`<div class="tl"><span>${l}</span><b class="${cls}" style="font-weight:500">${val}</b></div>`;
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">Today</h3><div class="lbl" style="margin-bottom:12px">${settings.birth?esc(kid())+' is '+ageLabel():'<span class="amb">Set name &amp; birthdate in Settings</span>'}</div>
+    ${row('Learning time',`${fmin(m)} / ${settings.learnGoal}m`,m>=settings.learnGoal?'grn':'')}
+    ${row('Read together',readDay(t)?'✓ Yes':'Not yet',readDay(t)?'grn':'mu')}
+    ${row('Active play',num(v.active)!=null?`${v.active} / ${settings.activeGoal}m`:'—',num(v.active)>=settings.activeGoal?'grn':'')}
+    ${row('Screen time',num(v.screen)!=null?`${v.screen} / ${settings.screenMax}m`:'—',num(v.screen)>settings.screenMax?'red':num(v.screen)!=null?'grn':'')}
+    ${row('Sleep (last night + nap)',sl!=null?fnum(sl)+' h':'—',sl!=null?(sl>=settings.sleepMin&&sl<=settings.sleepMax?'grn':'amb'):'')}
+    ${mom?`<div class="moment">“${esc(days[mom].moment)}”<div class="mu" style="font-style:normal;font-size:10px;margin-top:4px">${fdate(mom)}</div></div>`:''}</div>
+    <div class="ft"><span class="mu">Sleep, screen, play, mood &amp; moments</span><button class="btn" data-act="day">${I.notes}Day log</button></div></div>`;
+}
+
+function topCards(st,F){
+  const g=settings.learnGoal,lf=g?st.avgMin/g:0,SL=st.sl.length,SC=st.scr.length,b=targetBand(),bd=msDone(b),bt=MS[b].length;
+  const scf=st.screen==null?0:st.screen/settings.screenMax;
+  return`<div class="grid g4">
+  <div class="card"><div class="bd"><h3>Learning time</h3><div class="lbl">Avg minutes / day</div><div class="big">${fnum(Math.round(st.avgMin))}m</div>
+    ${gauge(lf<=1?[[lf,'g']]:[[1/lf,'g'],[1-1/lf,'a']],Math.round(lf*100)+'%')}
+    ${lr('var(--g)','Activities',st.N)}${lr('#4a4a4a','Days with activities',`${st.D} / ${st.span}`)}${lr('var(--b)','Avg engagement',st.eng==null?'—':`${f1(st.eng)} / 5`)}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Sleep</h3><div class="lbl">Avg hours (night + nap)</div><div class="big ${st.sleep==null?'':st.sleep>=settings.sleepMin&&st.sleep<=settings.sleepMax?'grn':'amb'}">${f1(st.sleep)}${st.sleep!=null?' h':''}</div>
+    ${gauge(SL?[[st.inBand/SL,'g'],[st.over/SL,'a'],[st.under/SL,'r']]:[],pct(st.inBand,SL))}
+    ${lr('var(--g)',`In ${settings.sleepMin}–${settings.sleepMax} h`,st.inBand,pct(st.inBand,SL))}${lr('var(--r)','Under',st.under,pct(st.under,SL))}${lr('#4a4a4a','Night / nap avg',`${f1(st.night)} / ${f1(st.nap)}`)}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Screen time</h3><div class="lbl">Avg minutes / day</div><div class="big ${st.screen==null?'':st.screen<=settings.screenMax?'grn':'red'}">${st.screen==null?'—':Math.round(st.screen)+'m'}</div>
+    ${gauge(scf<=1?[[scf,'g']]:[[1/scf,'g'],[1-1/scf,'r']],st.screen==null?'—':Math.round(scf*100)+'%')}
+    ${lr('var(--g)','Days at or under limit',`${st.scrOk} / ${SC}`)}${lr('#4a4a4a','Limit',settings.screenMax+'m')}${lr('var(--r)','Highest day',SC?Math.round(st.scrMax)+'m':'—')}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Milestones</h3><div class="lbl">Working toward: by ${b} years</div><div class="big">${bd} / ${bt}</div>
+    ${gauge([[bd/bt,'g']],pct(bd,bt))}
+    ${[3,4,5].map(x=>lr(x===b?'var(--g)':x<b?'var(--b)':'#4a4a4a',`By ${x} years`,`${msDone(x)} / ${MS[x].length}`)).join('')}</div>
+    <div class="ft"><span>Not a test — a conversation starter</span><button class="btn" data-act="milestones">${I.star}Open checklist</button></div></div>
+  </div>`;
+}
+
+function calendarHTML(){
+  const dm={};acts.filter(domOk).forEach(x=>{const d=dayOf(x),o=(dm[d]??={min:0,n:0,c:[]});o.min+=x.min||0;o.n++;o.c.push(DOM[x.domain].col)});
+  const y=S.month.getFullYear(),mo=S.month.getMonth(),first=new Date(y,mo,1),start=new Date(first);start.setDate(1-first.getDay());
+  const tk=today();let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat','Week'].map(d=>`<div class="dh">${d}</div>`).join(''),tm=0,td=0,tn=0;
+  for(let w=0;w<6;w++){
+    let wm=0,wd=0;
+    for(let i=0;i<7;i++){
+      const d=new Date(start);d.setDate(start.getDate()+w*7+i);const k=ymd(d),v=dm[k];
+      if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
+      if(v){wm+=v.min;wd++;tm+=v.min;td++;tn+=v.n}
+      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}"${v?` style="background:rgba(31,174,143,${(.08+.3*Math.min(1,v.min/settings.learnGoal)).toFixed(2)})"`:''}>
+        <span>${d.getDate()}</span>${v?`<b>${fmin(v.min)}</b><small>${v.n} act</small><div class="cdots">${v.c.slice(0,5).map(c=>`<i style="background:${c}"></i>`).join('')}</div>`:''}${days[k]?'<i class="nd" title="Day log"></i>':''}</div>`;
+    }
+    h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:'—'}</div>`;
+  }
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:10px">Activity Calendar</h3><div class="lbl">Total learning time</div>
+    <div class="calhd"><div class="big">${fmin(tm)}</div><div class="wl">Days: <b class="grn" style="font-weight:500">${td}</b> &nbsp;&nbsp; Reading streak: <b style="font-weight:500;color:#4a78ff">${readStreak()}</b></div></div>
+    <div class="cal">${h}</div></div>
+    <div class="ft calft"><div class="nav"><button data-act="mprev">‹</button><span>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span><button data-act="mnext">›</button><button class="tb" data-act="mtoday">Today</button></div>
+    <span>${td} days &nbsp;&nbsp; ${tn} activities</span></div></div>`;
+}
+
+function evalHTML(st){
+  const c=(v,good,ok,rev)=>v==null?'':rev?(v<=good?'grn':v<=ok?'amb':'red'):(v>=good?'grn':v>=ok?'amb':'red');
+  const sk=st.sleep==null?'':st.sleep>=settings.sleepMin&&st.sleep<=settings.sleepMax?'grn':'amb';
+  const scK=c(st.screen,settings.screenMax,settings.screenMax*1.5,1),acK=c(st.active,settings.activeGoal,settings.activeGoal*.66);
+  const rdK=c(st.readDays/st.span,.85,.5),mdK=c(st.mood,4,3),enK=c(st.eng,3.5,2.5),dmK=c(st.dom7,6,4);
+  const sp=(k,t)=>`<span class="${k}">${t}</span>`;
+  return`<div class="card"><div class="bd ev"><h3>Habits &amp; balance</h3>
+    <h4>DAILY HABITS</h4>
+    ${er(CV[sk],'Avg sleep (night + nap)',st.sleep==null?'—':sp(sk,f1(st.sleep)+' h'),`Common guidance for ages 3–5: ${settings.sleepMin}–${settings.sleepMax} h per 24 h including naps`)}
+    ${er(CV[scK],'Avg screen time',st.screen==null?'—':sp(scK,Math.round(st.screen)+' min'),`Common guidance for ages 2–5: about ${settings.screenMax} min/day of high-quality content, co-viewed when possible`)}
+    ${er(CV[acK],'Avg active play',st.active==null?'—':sp(acK,Math.round(st.active)+' min'),`WHO guidance for ages 3–4: at least ${settings.activeGoal} min/day of physical activity spread across the day`)}
+    ${er(CV[rdK],'Days read together',sp(rdK,`${st.readDays} / ${st.span}`),'Days with a book logged or a literacy activity')}
+    ${er('transparent','Avg books / day',f1(st.books))}
+    <hr><h4>MOOD &amp; BEHAVIOR</h4>
+    ${er(CV[mdK],'Avg mood',st.mood==null?'—':sp(mdK,`${f1(st.mood)} / 5`),'Your 1–5 rating of the day overall')}
+    ${er('transparent','Tantrums / day',f1(st.tantrums),'Frequent tantrums are normal at this age — look for trends, not single days')}
+    ${er(CV[enK],'Activity engagement',st.eng==null?'—':sp(enK,`${f1(st.eng)} / 5`),'How into the activities they were')}
+    <hr><h4>CONSISTENCY</h4>
+    ${er(st.streak?'var(--b)':'transparent','Reading streak',st.streak+' day'+(st.streak===1?'':'s'),'Consecutive days reading together; today not done yet doesn’t break it')}
+    ${er(CV[dmK],'Areas covered (last 7 days)',sp(dmK,`${st.dom7} / 8`))}
+    ${er(st.since==null?'transparent':st.since>2?'var(--a)':'var(--g)','Days since last activity',st.since??'—')}
+    ${er('transparent','Last 5 activities',`<span class="l5">${st.last5.map(x=>`<i title="${esc(x.activity)}" style="background:${x.eng==null?'#555':x.eng>=4?'var(--g)':x.eng>=3?'var(--a)':'var(--r)'}"></i>`).join('')||'—'}</span>`,'Colored by engagement')}
+  </div></div>`;
+}
+
+function chartsHTML(st,F){
+  const rt=`${fdate(st.from)} - ${fdate(st.to)}`,n=Math.min(st.span,180),start=addDays(st.to,-(n-1)),dm={};
+  st.a.forEach(x=>{const d=dayOf(x);dm[d]=(dm[d]||0)+(x.min||0)});
+  const trend=Array.from({length:n},(_,i)=>dm[addDays(start,i)]||0);
+  const gr=Object.keys(days).filter(d=>num(days[d].height)!=null).sort(),hs=gr.map(d=>num(days[d].height));
+  const wl=Object.keys(days).filter(d=>num(days[d].weight)!=null).sort().at(-1);
+  const top=DK.slice().sort((a,b)=>st.dmin[b]-st.dmin[a])[0];
+  return`<div class="grid gm">
+    <div class="card"><div class="bd"><div class="eqh"><div><div class="lbl">Learning time trend</div><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">${rt} · dashed = ${settings.learnGoal}m goal</div></div>
+      <div class="ks"><div>ACTIVITIES<b>${st.N}</b></div><div>AREAS<b>${DK.filter(k=>st.dmin[k]).length} / 8</b></div><div>ENGAGEMENT<b>${st.eng==null?'—':f1(st.eng)}</b></div>
+      <div>READ DAYS<b style="color:#4a78ff">${st.readDays}</b></div><div>STREAK<b>${st.streak}</b></div></div></div>
+      ${trend.length>1?area(trend,'#1fae8f',{tgt:settings.learnGoal}):bars(trend,{lines:[settings.learnGoal]})}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Sleep</h3><div class="lbl">Hours / night + nap · dashed = ${settings.sleepMin}–${settings.sleepMax} h</div><div class="big">${f1(st.sleep)}${st.sleep!=null?' h':''}</div>
+      ${bars(st.sl.map(x=>x.v),{lines:[settings.sleepMin,settings.sleepMax],colorFn:v=>v<settings.sleepMin?'r':v>settings.sleepMax?'a':'g'})}</div>${F}</div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><div class="bd"><h3>Balance</h3><div class="lbl">Minutes by area</div><div class="big">${st.tot?DOM[top].n:'—'}</div>
+      ${st.N?radar(DK.map(k=>DOM[k].n),DK.map(k=>st.dmin[k])):'<div class="empty">No activities in range</div>'}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Screen time</h3><div class="lbl">Minutes / day · dashed = ${settings.screenMax}m</div><div class="big">${st.screen==null?'—':Math.round(st.screen)+'m'}</div>
+      ${bars(st.scr.map(x=>x.v),{lines:[settings.screenMax],colorFn:v=>v>settings.screenMax?'r':'g'})}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Growth</h3><div class="lbl">Height (${HU()}) · all time</div>
+      <div class="big">${hs.length?fnum(hs.at(-1))+' '+HU():'—'} ${wl?`<span class="mu" style="font-size:12px;font-weight:500">· ${fnum(days[wl].weight)} ${WU()}</span>`:''}</div>
+      ${hs.length>1?area(hs,'#4a78ff',{zero:false}):'<div class="empty">Log height &amp; weight in Day log after check-ups</div>'}</div>${foot(gr[0]?fdate(gr[0]):'—',gr.length?fdate(gr.at(-1)):'—')}</div>
+  </div>`;
+}
+
+function tableHTML(f){
+  f=[...f].sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const pages=Math.max(1,Math.ceil(f.length/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
+  const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  return`<div class="th"><h3>Activity log</h3><button class="btn" data-act="export">${I.dl}Export CSV</button></div>
+  <div class="tw"><table><thead><tr><th>Date (local)</th><th>Activity</th><th>Area</th><th class="num">Time</th><th>Engagement</th><th>Noticed</th><th>Note</th><th></th></tr></thead><tbody>
+  ${rows.map(x=>`<tr><td class="mu2">${tf(x.time)}</td><td><b>${esc(x.activity)}</b></td><td>${pill(x.domain)}</td><td class="num">${fmin(x.min)}</td>
+    <td class="${x.eng>=4?'grn':x.eng>=3?'amb':x.eng?'red':''}">${x.eng?'●'.repeat(x.eng)+'<span class="mu">'+'●'.repeat(5-x.eng)+'</span>':'—'}</td>
+    <td class="tnote">${esc(x.obs)||''}</td><td class="tnote">${esc(x.note)||''}</td>
+    <td><div class="acts"><button data-act="info" data-id="${x.id}" title="Details">${I.info}</button><button data-act="edit" data-id="${x.id}" title="Edit">${I.note}</button></div></td></tr>`).join('')
+  ||'<tr><td colspan="8" style="text-align:center;color:#555;padding:30px">No activities in this range</td></tr>'}
+  </tbody></table></div>
+  <div class="tf"><div class="pg"><button data-act="pprev">‹</button>Page <input id="pgIn" type="number" min="1" value="${S.page}"> of ${pages}<button data-act="pnext">›</button></div>
+  <div class="pg"><select id="rowsSel" class="rs">${[10,20,50,100].map(n=>`<option value="${n}" ${n===S.rows?'selected':''}>${n} rows</option>`).join('')}</select><span style="margin-left:8px">${f.length} records</span></div></div>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  $('#fDom').value=S.dom;$('#fRange').value=S.range;
+  const rg=range(),f=filtered(),st=stats(f,rg),F=foot(fdate(st.from),fdate(st.to));
+  $('#ctx').textContent=`${settings.name?esc(settings.name)+(settings.birth?' · '+ageLabel():'')+' · ':''}${S.dom==='all'?'All areas':DOM[S.dom].n} - ${S.sel?fdate(S.sel):RL[S.range]}`;
+  const ban=acts.length||Object.keys(days).length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome — nothing logged yet</h3><div class="mu" style="font-size:12px">Add ${esc(kid())}'s name and birthdate in Settings, start a guided activity, or load demo data to explore.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="astart">${I.play}Start activity</button><button class="btn" data-act="data">Settings</button><button class="btn" data-act="demo">Load demo</button></div></div>`;
+  $('#app').innerHTML=ban+`<div class="grid gm">${weekHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(f)}</div>`;
+}
+
+/* ---------- activity session ---------- */
+let PS=null,P=null;const RC=2*Math.PI*110;
+function openPo(){$('#po').classList.remove('hidden');document.body.style.overflow='hidden'}
+function closePo(){if(P){clearInterval(P.iv)}P=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';unwake()}
+function starter(actId){
+  const sg=suggest(),a=LIBM[actId]||LIBM[sg.act];
+  PS={dom:a[2],act:a[0],min:a[3]};openPo();drawStarter();
+}
+function drawStarter(){
+  const sg=suggest(),list=LIB.filter(x=>x[2]===PS.dom),a=LIBM[PS.act];
+  const lastD=id=>{const l=acts.filter(x=>x.lib===id).map(dayOf).sort().at(-1);return l?`${diffDays(l,today())}d ago`:'new'};
+  $('#po').innerHTML=`<div class="pbox"><div class="row" style="align-items:center"><h3 style="margin:0;font-size:15px">Start an activity${settings.name?' with '+esc(settings.name):''}</h3><button class="btn" data-act="pclose">Close</button></div>
+    <div class="plbl">Area ${PS.dom===sg.dom?'<span class="grn">· least practiced this week</span>':''}</div>
+    <div class="chips">${DK.map(k=>`<button class="chip${k===PS.dom?' on':''}" data-act="sdom" data-v="${k}" style="${k===PS.dom?'':`border-color:${DOM[k].col}55`}">${DOM[k].n}</button>`).join('')}</div>
+    <div class="plbl">Activity</div>
+    <div class="alist">${list.map(x=>`<button class="aitem${x[0]===PS.act?' on':''}" data-act="sact" data-v="${x[0]}"><b>${esc(x[1])}</b><small>${x[3]} min · ${lastD(x[0])}</small></button>`).join('')}</div>
+    <div class="adet"><b>${esc(a[1])}</b> <span class="mu">· You’ll need: ${esc(a[4])}</span><ol>${a[5].map(s=>`<li>${esc(s)}</li>`).join('')}</ol>${a[6]?`<div class="mu">💡 ${esc(a[6])}</div>`:''}</div>
+    <div class="plbl">Duration</div><div class="chips">${[5,10,15,20,30].map(m=>`<button class="chip${PS.min===m?' on':''}" data-act="smin" data-v="${m}">${m} min</button>`).join('')}</div>
+    <button class="btn go big2" data-act="abegin">${I.play}Begin ${PS.min} min</button></div>`;
+}
+const elA=()=>((P.pausedAt??Date.now())-P.start-P.pt)/1000;
+function beginAct(){
+  const a=LIBM[PS.act];chime();
+  P={id:a[0],name:a[1],dom:a[2],min:PS.min,start:Date.now(),pausedAt:null,pt:0,rang:false,done:false};
+  wake();
+  $('#po').innerHTML=`<div class="prun"><div class="ptype">${DOM[a[2]].n}</div><h3 style="font-size:18px;margin:0">${esc(a[1])}</h3>
+    <div class="ringw"><svg viewBox="0 0 240 240"><circle cx="120" cy="120" r="110" stroke="#1f1f1f" stroke-width="6" fill="none"/>
+      <circle id="aring" cx="120" cy="120" r="110" stroke="${DOM[a[2]].col}" stroke-width="6" fill="none" stroke-dasharray="${RC.toFixed(1)}" stroke-dashoffset="${RC.toFixed(1)}" transform="rotate(-90 120 120)" stroke-linecap="round"/></svg>
+      <div class="ringt"><div id="atime" class="atime">${mmss(P.min*60)}</div><div id="alab" class="mu" style="font-size:11px;padding:0 24px">remaining</div></div></div>
+    <div class="steps">${a[5].map(s=>`<label><input type="checkbox"><span>${esc(s)}</span></label>`).join('')}</div>
+    ${a[6]?`<div class="tip" style="width:100%;text-align:left">💡 ${esc(a[6])}</div>`:''}
+    <div class="mact" style="justify-content:center;margin-bottom:30px"><button class="btn" id="apb" data-act="apause">Pause</button><button class="btn go" data-act="aend">Done</button></div></div>`;
+  $('#po').scrollTop=0;
+  P.iv=setInterval(tickA,250);
+}
+function tickA(){
+  if(!P||P.done||P.pausedAt)return;
+  const e=elA(),T=P.min*60,left=T-e,t=$('#atime');
+  if(t)t.textContent=left>0?mmss(left):'+'+mmss(-left);
+  const r=$('#aring');if(r)r.setAttribute('stroke-dashoffset',(RC*(1-Math.min(1,e/T))).toFixed(1));
+  if(left<=0&&!P.rang){P.rang=true;chime();navigator.vibrate?.([200,100,200]);const l=$('#alab');if(l)l.textContent='time’s up — keep going if they’re into it'}
+}
+function togglePauseA(){
+  if(!P)return;
+  if(P.pausedAt){P.pt+=Date.now()-P.pausedAt;P.pausedAt=null;$('#apb').textContent='Pause';wake()}
+  else{P.pausedAt=Date.now();$('#apb').textContent='Resume';unwake()}
+}
+function finishAct(){
+  P.done=true;clearInterval(P.iv);unwake();P.actual=Math.max(1,Math.round(elA()/60));P.eng=3;
+  $('#po').innerHTML=`<div class="pbox"><h3 style="font-size:15px;margin-bottom:4px">${esc(P.name)} · ${fmin(P.actual)}</h3><div class="mu" style="font-size:12px">${DOM[P.dom].n}</div>
+    <div class="plbl">How into it ${settings.name?esc(settings.name)+' was':'were they'}?</div>
+    <div class="chips">${ENG.map((l,i)=>`<button class="chip${P.eng===i+1?' on':''}" data-act="aeng" data-v="${i+1}">${i+1} · ${l}</button>`).join('')}</div>
+    <div class="plbl">New word, skill or moment you noticed (optional)</div>
+    <input id="aobs" style="width:100%;background:#101010;border:1px solid var(--line);border-radius:5px;padding:9px" placeholder="e.g. counted to 12 on their own">
+    <div class="plbl">Note (optional)</div>
+    <textarea id="anote" rows="3" style="width:100%;background:#101010;border:1px solid var(--line);border-radius:5px;padding:8px" placeholder="What worked, what to try next time"></textarea>
+    <div class="mact"><button class="btn dng" data-act="adiscard">Discard</button><div class="sp"></div><button class="btn" data-act="milestones">${I.star}Milestones</button><button class="btn go" data-act="asave">Save</button></div></div>`;
+  $('#po').scrollTop=0;
+}
+function saveAct(){
+  acts.push({id:uid(),time:new Date(P.start).toISOString(),activity:P.name,lib:P.id,domain:P.dom,min:P.actual,eng:P.eng,obs:$('#aobs').value.trim(),note:$('#anote').value.trim(),guided:true});
+  save();closePo();render();toast('Activity saved');
+}
+
+/* ---------- modals ---------- */
+const openModal=(h,wide)=>{$('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#modal').classList.remove('hidden')};
+const closeModal=()=>$('#modal').classList.add('hidden');
+function logForm(x){
+  const isNew=!x;x=x||{time:new Date().toISOString(),activity:'',domain:'lang',min:15,eng:3,obs:'',note:''};
+  const names=[...new Set([...LIB.map(a=>a[1]),...acts.map(a=>a.activity)])].sort();
+  openModal(`<h3>${isNew?'Log activity':'Edit activity'}</h3><div class="fg">
+    <label>Time<input id="f_time" type="datetime-local" value="${toLocalInput(x.time)}"></label>
+    <label>Activity<input id="f_activity" list="aList" value="${esc(x.activity)}" autocomplete="off" placeholder="e.g. Shared reading"><datalist id="aList">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>
+    <label>Area<select id="f_domain">${DK.map(k=>`<option value="${k}" ${k===x.domain?'selected':''}>${DOM[k].n}</option>`).join('')}</select></label>
+    <label>Minutes<input id="f_min" type="number" min="1" step="1" value="${x.min}"></label>
+    <label class="full">Engagement<select id="f_eng"><option value="">—</option>${ENG.map((l,i)=>`<option value="${i+1}" ${x.eng===i+1?'selected':''}>${i+1} · ${l}</option>`).join('')}</select></label>
+    <label class="full">Noticed (word, skill, moment)<input id="f_obs" value="${esc(x.obs)}"></label>
+    <label class="full">Note<textarea id="f_note" rows="2">${esc(x.note)}</textarea></label></div>
+    <div class="mact">${isNew?'':`<button class="btn dng" data-act="del" data-id="${x.id}">Delete</button>`}<div class="sp"></div>
+    <button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="save" data-id="${x.id||''}">Save</button></div>`);
+}
+function saveLog(id){
+  const g=k=>$('#f_'+k).value,d=new Date(g('time')),name=g('activity').trim();
+  if(isNaN(d))return toast('Invalid time');if(!name)return toast('Activity name required');
+  const lib=LIB.find(a=>a[1].toLowerCase()===name.toLowerCase()),old=acts.find(a=>a.id===id);
+  const x={id:id||uid(),time:d.toISOString(),activity:name,lib:lib?.[0]||null,domain:g('domain'),min:Math.max(1,+g('min')||1),eng:+g('eng')||null,obs:g('obs').trim(),note:g('note').trim(),guided:old?.guided||false};
+  const i=acts.findIndex(a=>a.id===id);i>=0?acts[i]=x:acts.push(x);save();closeModal();render();
+}
+function info(id){
+  const x=acts.find(a=>a.id===id);if(!x)return;const l=LIBM[x.lib];
+  openModal(`<h3>${esc(x.activity)}</h3><div class="kv">
+    <span>Time</span><b>${new Date(x.time).toLocaleString()}</b><span>Area</span><b>${pill(x.domain)}</b><span>Duration</span><b>${fmin(x.min)}</b>
+    <span>Engagement</span><b>${x.eng?`${x.eng} · ${ENG[x.eng-1]}`:'—'}</b><span>Noticed</span><b style="font-weight:400">${esc(x.obs)||'—'}</b>
+    <span>Note</span><b style="font-weight:400;white-space:pre-wrap">${esc(x.note)||'—'}</b><span>Source</span><b>${x.guided?'Guided activity':'Manual log'}</b></div>
+    ${l?`<div class="adet"><ol>${l[5].map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>`:''}
+    <div class="mact"><div class="sp"></div>${l?`<button class="btn go" data-act="astart" data-v="${l[0]}">${I.play}Do again</button>`:''}<button class="btn" data-act="edit" data-id="${x.id}">Edit</button><button class="btn pri" data-act="close">Close</button></div>`);
+}
+function dayForm(dd){
+  const day=dd||S.sel||today(),v=days[day]||{};
+  const f=(k,l,x='')=>`<label>${l}<input id="d_${k}" type="number" value="${esc(v[k]??'')}" ${x}></label>`;
+  openModal(`<h3>Day log</h3><div class="fg">
+    <label class="full">Date<input id="d_date" type="date" value="${day}"></label>
+    ${f('sleep','Night sleep (h)','min="0" max="16" step="0.25"')}${f('nap','Nap (h)','min="0" max="5" step="0.25"')}
+    ${f('screen','Screen time (min)','min="0" step="5"')}${f('active','Active play (min)','min="0" step="5"')}
+    ${f('books','Books read together','min="0" step="1"')}${f('tantrums','Tantrums / meltdowns','min="0" step="1"')}
+    <label>Overall mood<select id="d_mood"><option value="">—</option>${MOOD.map((l,i)=>`<option value="${i+1}" ${+v.mood===i+1?'selected':''}>${i+1} · ${l}</option>`).join('')}</select></label>
+    <label>Meals<select id="d_meal"><option value="">—</option>${['Ate well','Okay','Picky'].map(l=>`<option ${v.meal===l?'selected':''}>${l}</option>`).join('')}</select></label>
+    ${f('height',`Height (${HU()}, optional)`,'min="0" step="0.1"')}${f('weight',`Weight (${WU()}, optional)`,'min="0" step="0.1"')}
+    <label class="full">Moment (funny quote, first, new word)<input id="d_moment" value="${esc(v.moment||'')}" placeholder="“Daddy, the moon is following us!”"></label>
+    <label class="full">Notes<textarea id="d_note" rows="3">${esc(v.note||'')}</textarea></label></div>
+    <div class="mact">${days[day]?'<button class="btn dng" data-act="delday">Delete day</button>':''}<div class="sp"></div><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="saveday">Save</button></div>`);
+}
+function saveDay(){
+  const d=$('#d_date').value;if(!d)return toast('Pick a date');
+  const o={};['sleep','nap','screen','active','books','tantrums','height','weight'].forEach(k=>{const v=$('#d_'+k).value;if(v!=='')o[k]=+v});
+  ['mood'].forEach(k=>{const v=$('#d_'+k).value;if(v!=='')o[k]=+v});
+  ['meal','moment','note'].forEach(k=>{const v=$('#d_'+k).value.trim();if(v)o[k]=v});
+  if(Object.keys(o).length)days[d]=o;else delete days[d];save();closeModal();render();
+}
+let MT=null;
+function msForm(band){
+  MT=band||MT||targetBand();
+  const items=MS[MT].map((m,i)=>({d:m[0],t:m[1],id:msId(MT,i)}));
+  openModal(`<div class="row" style="align-items:center;margin-bottom:6px"><h3 style="margin:0;font-size:15px">Milestones${settings.name?' · '+esc(settings.name):''}</h3><button class="btn" data-act="close">Close</button></div>
+    <p class="mu">Paraphrased from the CDC’s <i>Learn the Signs. Act Early.</i> checklists (2022). Each item is something most children (about 3 in 4) do by that age, so it’s normal for some to come later. Tick an item when you’ve seen it and add the date.</p>
+    <div class="tabs">${[3,4,5].map(b=>`<button class="chip${b===MT?' on':''}" data-act="mstab" data-v="${b}">By ${b} years · ${msDone(b)}/${MS[b].length}</button>`).join('')}</div>
+    ${Object.keys(MSD).map(dk=>{const l=items.filter(x=>x.d===dk);return l.length?`<div class="msg">${MSD[dk].toUpperCase()}</div>${l.map(x=>`<div class="msi"><input type="checkbox" data-ms="${x.id}" ${ms[x.id]?'checked':''}><span>${esc(x.t)}</span>${ms[x.id]?`<input type="date" data-msd="${x.id}" value="${ms[x.id]}">`:''}</div>`).join('')}`:''}).join('')}
+    <div class="tip">If ${esc(kid())} is missing several milestones for their age, loses skills they once had, or you’re worried about anything, bring it up with your pediatrician — you don’t need to wait for the next check-up. Acting early is what these lists are for. The full checklists and the free CDC Milestone Tracker app are at cdc.gov/actearly.</div>`,true);
+}
+function dataForm(){
+  const s=settings;
+  openModal(`<h3>Settings &amp; data</h3><div class="fg">
+    <label>Child’s name<input id="s_name" value="${esc(s.name)}"></label><label>Birthdate<input id="s_birth" type="date" value="${esc(s.birth)}"></label>
+    <label>Learning goal (min/day)<input id="s_learn" type="number" min="5" step="5" value="${s.learnGoal}"></label>
+    <label>Screen limit (min/day)<input id="s_screen" type="number" min="0" step="5" value="${s.screenMax}"></label>
+    <label>Active play goal (min/day)<input id="s_active" type="number" min="0" step="10" value="${s.activeGoal}"></label>
+    <label>Units<select id="s_unit"><option value="us" ${s.unit==='us'?'selected':''}>in / lb</option><option value="metric" ${s.unit==='metric'?'selected':''}>cm / kg</option></select></label>
+    <label>Sleep range min (h)<input id="s_smin" type="number" min="6" max="16" step="0.5" value="${s.sleepMin}"></label>
+    <label>Sleep range max (h)<input id="s_smax" type="number" min="6" max="16" step="0.5" value="${s.sleepMax}"></label>
+    <label class="full">Restore from backup (.json)<input id="i_file" type="file" accept=".json,application/json"></label></div>
+    <p class="mu" style="margin-top:10px">Defaults follow common guidance for ages 3–5. Everything stays on this device only — use Backup to keep a copy.</p>
+    <div class="mact"><button class="btn dng" data-act="clear">Clear all</button><button class="btn" data-act="demo">Load demo</button><div class="sp"></div>
+    <button class="btn" data-act="backup">${I.dl}Backup</button><button class="btn pri" data-act="savedata">Save</button></div>`);
+}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportCSV(){
+  const f=filtered().sort((a,b)=>new Date(a.time)-new Date(b.time)),q=s=>/[",\n]/.test(s=String(s??''))?`"${s.replace(/"/g,'""')}"`:s;
+  download(`activities-${today()}.csv`,['time,activity,area,minutes,engagement,noticed,note,guided',...f.map(x=>[x.time,x.activity,DOM[x.domain].n,x.min,x.eng,x.obs,x.note,x.guided].map(q).join(','))].join('\n'),'text/csv');
+}
+async function restore(file){
+  try{const o=JSON.parse(await file.text());if(!o||!Array.isArray(o.acts))throw 0;
+    if(!confirm('Replace all current data with this backup?'))return;
+    acts=o.acts;days=o.days||{};ms=o.ms||{};settings=Object.assign(settings,o.settings||{});save();render();toast('Backup restored')}
+  catch{toast('Not a valid backup file')}
+}
+
+/* ---------- demo ---------- */
+function demoData(){
+  let sd=9;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,pick=a=>a[Math.floor(rnd()*a.length)];
+  const moments=['“Why is the sky blue? No, why?”','Counted all the stairs by himself','Said “actually” for the first time','Helped feed the dog without being asked','Made up a song about trucks'];
+  let h=settings.unit==='us'?38.2:97;
+  for(let k=40;k>=1;k--){
+    const d=addDays(today(),-k),n=1+Math.floor(rnd()*3);
+    for(let i=0;i<n;i++){const a=rnd()<.35?LIBM['shared-read']:pick(LIB),t=pd(d);t.setHours(9+Math.floor(rnd()*10),Math.floor(rnd()*50));
+      acts.push({id:uid(),time:t.toISOString(),activity:a[1],lib:a[0],domain:a[2],min:Math.max(5,a[3]+Math.round((rnd()-.5)*8)),eng:Math.min(5,Math.max(1,Math.round(2.5+rnd()*2.8))),obs:rnd()<.15?'Used a new word: “enormous”':'',note:'',guided:rnd()<.6})}
+    if(!days[d]){const o={sleep:r1(9.5+rnd()*2),nap:rnd()<.6?r1(.5+rnd()):0,screen:Math.round(20+rnd()*90),active:Math.round(90+rnd()*120),books:Math.floor(rnd()*4),mood:Math.min(5,Math.round(2.5+rnd()*2.6)),tantrums:Math.floor(rnd()*3),meal:pick(['Ate well','Okay','Picky'])};
+      if(rnd()<.15)o.moment=pick(moments);if(k%14===0){h+=settings.unit==='us'?.25:.6;o.height=r1(h);o.weight=settings.unit==='us'?r1(32+(40-k)*.03):r1(14.5+(40-k)*.015)}days[d]=o}
+  }
+  MS[3].forEach((_,i)=>{if(i<10&&!ms[msId(3,i)])ms[msId(3,i)]=addDays(today(),-120+i*5)});
+  [0,4,6,7,10,13].forEach((i,j)=>{if(!ms[msId(4,i)])ms[msId(4,i)]=addDays(today(),-40+j*6)});
+}
+
+/* ---------- events ---------- */
+$('#fDom').onchange=e=>{S.dom=e.target.value;S.page=1;render()};
+$('#fRange').onchange=e=>{S.range=e.target.value;S.sel=null;S.page=1;render()};
+document.addEventListener('change',e=>{
+  const t=e.target,id=t.id;
+  if(id==='rowsSel'){S.rows=+t.value;S.page=1;render()}
+  if(id==='pgIn'){S.page=+t.value||1;render()}
+  if(id==='d_date'){closeModal();dayForm(t.value)}
+  if(id==='f_activity'){const l=LIB.find(a=>a[1].toLowerCase()===t.value.trim().toLowerCase())||acts.find(a=>a.activity.toLowerCase()===t.value.trim().toLowerCase());
+    if(l){$('#f_domain').value=Array.isArray(l)?l[2]:l.domain;if(Array.isArray(l))$('#f_min').value=l[3]}}
+  if(t.dataset.ms){if(t.checked)ms[t.dataset.ms]=today();else delete ms[t.dataset.ms];save();msForm();render()}
+  if(t.dataset.msd){if(t.value)ms[t.dataset.msd]=t.value;save();render()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#po').classList.contains('hidden'))closeModal()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&P&&!P.done&&!P.pausedAt)wake()});
+document.addEventListener('click',e=>{
+  if(e.target.id==='modal')return closeModal();
+  const day=e.target.closest('[data-day]');
+  if(day){S.sel=S.sel===day.dataset.day?null:day.dataset.day;S.page=1;render();return}
+  const b=e.target.closest('[data-act]');if(!b)return;const id=b.dataset.id,v=b.dataset.v;
+  const A={
+    mprev:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render()},
+    mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
+    mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
+    pprev:()=>{S.page--;render()},pnext:()=>{S.page++;render()},
+    add:()=>logForm(),edit:()=>logForm(acts.find(a=>a.id===id)),info:()=>info(id),save:()=>saveLog(id),close:closeModal,
+    del:()=>{if(confirm('Delete this activity?')){acts=acts.filter(a=>a.id!==id);save();closeModal();render()}},
+    day:()=>dayForm(),saveday:saveDay,delday:()=>{const d=$('#d_date').value;if(confirm('Delete this day’s log?')){delete days[d];save();closeModal();render()}},
+    milestones:()=>{if(!$('#po').classList.contains('hidden')&&P&&P.done){/* keep overlay */}msForm(targetBand())},mstab:()=>msForm(+v),
+    data:dataForm,export:exportCSV,backup:()=>download(`little-journal-backup-${today()}.json`,JSON.stringify({version:1,acts,days,ms,settings},null,1),'application/json'),
+    savedata:async()=>{Object.assign(settings,{name:$('#s_name').value.trim(),birth:$('#s_birth').value,learnGoal:Math.max(5,+$('#s_learn').value||30),screenMax:Math.max(0,+$('#s_screen').value||60),
+      activeGoal:Math.max(0,+$('#s_active').value||180),unit:$('#s_unit').value,sleepMin:+$('#s_smin').value||10,sleepMax:+$('#s_smax').value||13});save();
+      const file=$('#i_file').files[0];closeModal();if(file)await restore(file);else render()},
+    demo:()=>{demoData();save();closeModal();S.range='7d';S.sel=null;render();toast('Demo data loaded')},
+    clear:()=>{if(confirm('Delete ALL activities, day logs and milestones? Make a backup first if you want to keep them.')){acts=[];days={};ms={};save();closeModal();render()}},
+    astart:()=>{closeModal();starter(v)},pclose:closePo,
+    sdom:()=>{PS.dom=v;const s=suggest();const first=LIB.filter(x=>x[2]===v);const pickA=v===s.dom?LIBM[s.act]:first[0];PS.act=pickA[0];PS.min=pickA[3];drawStarter()},
+    sact:()=>{PS.act=v;PS.min=LIBM[v][3];drawStarter()},smin:()=>{PS.min=+v;drawStarter()},
+    abegin:beginAct,apause:togglePauseA,aend:finishAct,
+    aeng:()=>{P.eng=+v;document.querySelectorAll('[data-act="aeng"]').forEach(c=>c.classList.toggle('on',c.dataset.v===v))},
+    asave:saveAct,adiscard:()=>{if(confirm('Discard this activity?'))closePo()}
+  };
+  A[b.dataset.act]?.();
+});
+
+render();
+if(new URLSearchParams(location.search).has('start')){history.replaceState(null,'',location.pathname);starter()}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
